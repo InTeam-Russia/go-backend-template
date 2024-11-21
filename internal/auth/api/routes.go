@@ -7,8 +7,8 @@ import (
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/session"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/shared"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/user"
-	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -110,14 +110,7 @@ func SetupRoutes(
 			return
 		}
 
-		c.JSON(http.StatusCreated, user.UserOut{
-			Id:        u.Id,
-			CreatedAt: u.CreatedAt,
-			FirstName: u.FirstName,
-			LastName:  u.LastName,
-			Username:  u.Username,
-			Role:      u.Role,
-		})
+		c.JSON(http.StatusCreated, mapUserToUserOut(u))
 	})
 
 	r.POST("/logout", func(c *gin.Context) {
@@ -127,7 +120,7 @@ func SetupRoutes(
 			return
 		}
 
-		cookieIdUUID, err := helpers.UUIDFromString(cookie)
+		cookieIdUUID, err := uuid.Parse(cookie)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
 			return
@@ -146,4 +139,57 @@ func SetupRoutes(
 			"status": "OK",
 		})
 	})
+
+	r.GET("/session", func(c *gin.Context) {
+		cookie, err := c.Cookie(sessionCookieName)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
+			return
+		}
+
+		cookieIdUUID, err := uuid.Parse(cookie)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
+			return
+		}
+
+		session, err := sessionRepo.GetById(cookieIdUUID)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			logger.Error(err.Error())
+			return
+		}
+
+		if session == nil {
+			c.JSON(http.StatusUnauthorized, apierr.SessionNotFound)
+			return
+		}
+
+		u, err := userRepo.GetById(session.UserId)
+
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			logger.Error(err.Error())
+			return
+		}
+
+		if u == nil {
+			c.JSON(http.StatusUnauthorized, apierr.UserNotFound)
+			return
+		}
+
+		c.JSON(http.StatusCreated, mapUserToUserOut(u))
+	})
+}
+
+func mapUserToUserOut(u *user.User) *user.UserOut {
+	return &user.UserOut{
+		Id:        u.Id,
+		CreatedAt: u.CreatedAt,
+		FirstName: u.FirstName,
+		LastName:  u.LastName,
+		Username:  u.Username,
+		Role:      u.Role,
+	}
 }

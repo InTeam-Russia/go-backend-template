@@ -27,3 +27,11 @@ var WrongCredentials = ApiError{
 var CookieNotExists = ApiError{
 	Error: "COOKIE_NOT_EXISTS",
 }
+
+var SessionNotFound = ApiError{
+	Error: "SESSION_NOT_FOUND",
+}
+
+var UserNotFound = ApiError{
+	Error: "USER_NOT_FOUND",
+}

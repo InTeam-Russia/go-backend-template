@@ -58,7 +58,7 @@ func (r *RedisSessionRepository) GetById(id uuid.UUID) (*Session, error) {
 
 	if err == redis.Nil {
 		r.logger.Debug("Session not found", zap.String("session_id", id.String()))
-		return nil, SessionNotFound
+		return nil, nil
 	}
 
 	if err != nil {
