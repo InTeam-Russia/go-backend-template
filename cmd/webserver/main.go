@@ -7,6 +7,7 @@ import (
 	"github.com/InTeam-Russia/go-backend-template/internal/auth"
 	"github.com/InTeam-Russia/go-backend-template/internal/config"
 	"github.com/InTeam-Russia/go-backend-template/internal/db"
+	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -33,6 +34,7 @@ func main() {
 	defer redisClient.Close()
 
 	r := gin.New()
+	helpers.SetupCORS(r)
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 	r.Use(ginzap.RecoveryWithZap(logger, true))
 
