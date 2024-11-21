@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"runtime"
@@ -30,4 +31,10 @@ func HashPassword(password string, salt []byte) []byte {
 		HASH_PASSWORD_LEN,
 	)
 	return hash
+}
+
+func ValidPassword(enteredPassword string, passwordHash []byte, passwordSalt []byte) bool {
+	fmt.Println(passwordSalt)
+	enteredPasswordHash := HashPassword(enteredPassword, passwordSalt)
+	return bytes.Equal(enteredPasswordHash, passwordHash)
 }
