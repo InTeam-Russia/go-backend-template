@@ -63,7 +63,7 @@ func (r *PgUserRepository) Create(user *CreateUser) (*User, error) {
 }
 
 const getByIdSql = `
-	SELECT id, first_name, last_name, username, role, password_hash, password_salt
+	SELECT id, first_name, last_name, username, role, password_hash, password_salt, created_at
 	FROM users
 	WHERE id = $1
 `
@@ -82,6 +82,7 @@ func (r *PgUserRepository) GetById(id int64) (*User, error) {
 		&user.Role,
 		&user.PasswordHash,
 		&user.PasswordSalt,
+		&user.CreatedAt,
 	)
 
 	if err != nil {
@@ -94,7 +95,7 @@ func (r *PgUserRepository) GetById(id int64) (*User, error) {
 }
 
 const getByUsernameSql = `
-	SELECT id, first_name, last_name, username, role, password_hash, password_salt
+	SELECT id, first_name, last_name, username, role, password_hash, password_salt, created_at
 	FROM users
 	WHERE username = $1
 `
@@ -113,6 +114,7 @@ func (r *PgUserRepository) GetByUsername(username string) (*User, error) {
 		&user.Role,
 		&user.PasswordHash,
 		&user.PasswordSalt,
+		&user.CreatedAt,
 	)
 
 	if err != nil {
