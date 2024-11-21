@@ -11,12 +11,15 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 )
 
 func main() {
-	logger, _ := zap.NewDevelopment()
-	config, err := config.LoadConfigFromEnv(logger)
+	config, err := config.LoadConfigFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	logger := helpers.CreateLogger(config.LogLevel)
 
 	pgPool, err := db.CreatePool(config.PostgresUrl, logger)
 	if err != nil {

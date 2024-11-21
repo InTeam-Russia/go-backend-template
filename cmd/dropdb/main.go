@@ -5,12 +5,12 @@ import (
 
 	"github.com/InTeam-Russia/go-backend-template/internal/config"
 	"github.com/InTeam-Russia/go-backend-template/internal/db"
-	"go.uber.org/zap"
+	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 )
 
 func main() {
-	logger, _ := zap.NewDevelopment()
-	config, err := config.LoadConfigFromEnv(logger)
+	config, err := config.LoadConfigFromEnv()
+	logger := helpers.CreateLogger(config.LogLevel)
 
 	pgPool, err := db.DropDb(config.PostgresUrl, logger)
 	if err != nil {

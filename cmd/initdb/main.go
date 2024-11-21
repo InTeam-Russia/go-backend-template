@@ -6,12 +6,12 @@ import (
 	"github.com/InTeam-Russia/go-backend-template/internal/auth"
 	"github.com/InTeam-Russia/go-backend-template/internal/config"
 	"github.com/InTeam-Russia/go-backend-template/internal/db"
-	"go.uber.org/zap"
+	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 )
 
 func main() {
-	logger, _ := zap.NewDevelopment()
-	config, err := config.LoadConfigFromEnv(logger)
+	config, err := config.LoadConfigFromEnv()
+	logger := helpers.CreateLogger(config.LogLevel)
 
 	pgPool, err := db.InitDb(config.PostgresUrl, logger)
 	if err != nil {
@@ -20,19 +20,19 @@ func main() {
 	}
 	defer pgPool.Close()
 
-		userRepo := auth.NewPgUserRepository(pgPool, logger)
-		_, err = userRepo.Create(&auth.CreateUser{
-			FirstName: "Admin",
-			LastName:  "Admin",
-			Username:  config.AdminUsername,
-			Role:      "ADMIN",
-			Password:  config.AdminPassword,
-		})
+	userRepo := auth.NewPgUserRepository(pgPool, logger)
+	_, err = userRepo.Create(&auth.CreateUser{
+		FirstName: "Admin",
+		LastName:  "Admin",
+		Username:  config.AdminUsername,
+		Role:      "ADMIN",
+		Password:  config.AdminPassword,
+	})
 
-		if err != nil {
-			logger.Error(err.Error())
-			os.Exit(1)
-		}
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
-		logger.Info("Admin created!")
+	logger.Info("Admin created!")
 }

@@ -1,14 +1,15 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"go.uber.org/zap"
 )
 
 type Config struct {
+	LogLevel            string
 	PostgresUrl         string
 	RedisUrl            string
 	SessionCookieSecure bool
@@ -17,10 +18,10 @@ type Config struct {
 	AdminPassword       string
 }
 
-func LoadConfigFromEnv(logger *zap.Logger) (*Config, error) {
+func LoadConfigFromEnv() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		logger.Warn(".env file not found")
+		fmt.Println(".env file not found")
 	}
 
 	sessionCookieSecure, err := strconv.ParseBool(os.Getenv("SESSION_COOKIE_SECURE"))
@@ -29,9 +30,12 @@ func LoadConfigFromEnv(logger *zap.Logger) (*Config, error) {
 	}
 
 	return &Config{
+		LogLevel:            os.Getenv("LOG_LEVEL"),
 		PostgresUrl:         os.Getenv("POSTGRES_URL"),
 		RedisUrl:            os.Getenv("REDIS_URL"),
 		SessionCookieSecure: sessionCookieSecure,
 		SessionCookieDomain: os.Getenv("SESSION_COOKIE_DOMAIN"),
+		AdminUsername:       os.Getenv("ADMIN_USERNAME"),
+		AdminPassword:       os.Getenv("ADMIN_PASSWORD"),
 	}, nil
 }
