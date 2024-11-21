@@ -18,7 +18,7 @@ func main() {
 	logger, _ := zap.NewDevelopment()
 	config, err := config.LoadConfigFromEnv(logger)
 
-	pgPool, err := db.InitDb(config.PostgresUrl, logger)
+	pgPool, err := db.CreatePool(config.PostgresUrl, logger)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

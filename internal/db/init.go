@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
@@ -12,9 +11,41 @@ import (
 )
 
 func InitDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
+	pool, err := CreatePool(dbUrl, logger)
+
+	createTableSql, err := os.ReadFile("./db/CreateTables.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = pool.Exec(context.Background(), string(createTableSql))
+	if err != nil {
+		return nil, err
+	}
+
+	return pool, err
+}
+
+func DropDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
+	pool, err := CreatePool(dbUrl, logger)
+
+	dropTableSql, err := os.ReadFile("./db/DropTables.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = pool.Exec(context.Background(), string(dropTableSql))
+	if err != nil {
+		return nil, err
+	}
+
+	return pool, err
+}
+
+func CreatePool(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	poolConfig, err := pgxpool.ParseConfig(dbUrl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse connection string: %v\n", err)
+		logger.Error("Unable to parse connection string")
 		os.Exit(1)
 	}
 
@@ -28,18 +59,8 @@ func InitDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
 		poolConfig,
 	)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
+		logger.Error("Unable to create connection pool")
 		os.Exit(1)
-	}
-
-	createTableSql, err := os.ReadFile("./db/schema.sql")
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = pool.Exec(context.Background(), string(createTableSql))
-	if err != nil {
-		return nil, err
 	}
 
 	return pool, err
