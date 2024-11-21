@@ -13,6 +13,8 @@ type Config struct {
 	RedisUrl            string
 	SessionCookieSecure bool
 	SessionCookieDomain string
+	AdminUsername       string
+	AdminPassword       string
 }
 
 func LoadConfigFromEnv(logger *zap.Logger) (*Config, error) {

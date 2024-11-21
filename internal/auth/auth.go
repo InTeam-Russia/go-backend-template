@@ -8,6 +8,7 @@ import (
 
 type CookieConfig = api.CookieConfig
 type UserRepository = user.UserRepository
+type CreateUser = user.CreateUser
 type SessionRepository = session.SessionRepository
 
 var SetupRoutes = api.SetupRoutes
