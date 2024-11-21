@@ -1,19 +1,13 @@
-package auth
+package user
 
 import (
 	"errors"
 	"time"
 
+	"github.com/InTeam-Russia/go-backend-template/internal/auth/shared"
 	"github.com/jackc/pgx"
 	"go.uber.org/zap"
 )
-
-type UserRepository interface {
-	Create(user *CreateUser) (*User, error)
-	GetByUsername(username string) (*User, error)
-	GetById(id int64) (*User, error)
-	DeleteById(id int64) error
-}
 
 type PgUserRepository struct {
 	db     *pgx.Conn
@@ -31,12 +25,12 @@ const createUserSql = `
 `
 
 func (r *PgUserRepository) Create(user *CreateUser) (*User, error) {
-	passwordSalt, err := GenerateSalt(16)
+	passwordSalt, err := shared.GenerateSalt(16)
 	if err != nil {
 		return nil, nil
 	}
 
-	passwordHash := HashPassword(user.Password, passwordSalt)
+	passwordHash := shared.HashPassword(user.Password, passwordSalt)
 	r.logger.Debug("Executing query", zap.String("query", createUserSql))
 
 	var newUser User
