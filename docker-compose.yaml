@@ -1,0 +1,70 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - REDIS_URL=redis://dragonfly/0
+      - SESSION_COOKIE_SECURE=false
+      - SESSION_COOKIE_DOMAIN=localhost:5173
+      - LOG_LEVEL=debug
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=123
+    depends_on:
+      - db
+      - dragonfly
+
+  initdb:
+    build: .
+    command: ["/app/initdb"]
+    environment:
+      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - REDIS_URL=redis://dragonfly/0
+      - SESSION_COOKIE_SECURE=false
+      - SESSION_COOKIE_DOMAIN=localhost:5173
+      - LOG_LEVEL=debug
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=123
+      - SQL_FILE=/app/db/CreateTables.sql
+    depends_on:
+      - backend
+
+  dropdb:
+    build: .
+    command: ["/app/dropdb"]
+    environment:
+      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - REDIS_URL=redis://dragonfly/0
+      - SESSION_COOKIE_SECURE=false
+      - SESSION_COOKIE_DOMAIN=localhost:5173
+      - LOG_LEVEL=debug
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=123
+      - SQL_FILE=/app/db/DropTables.sql
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:17.1-alpine
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+    healthcheck:
+      test: "pg_isready --username=${DB_USER} --database=${DB_NAME}"
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
+    ulimits:
+      memlock: -1
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

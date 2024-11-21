@@ -12,7 +12,7 @@ func main() {
 	config, err := config.LoadConfigFromEnv()
 	logger := helpers.CreateLogger(config.LogLevel)
 
-	pgPool, err := db.DropDb(config.PostgresUrl, logger)
+	pgPool, err := db.DropDb(config.PostgresUrl, os.Getenv("SQL_FILE"), logger)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

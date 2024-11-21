@@ -10,10 +10,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func InitDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
+func InitDb(dbUrl string, filePath string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	pool, err := CreatePool(dbUrl, logger)
 
-	createTableSql, err := os.ReadFile("./db/CreateTables.sql")
+	createTableSql, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -23,13 +23,15 @@ func InitDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
+	logger.Info("Tables created!")
+
 	return pool, err
 }
 
-func DropDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
+func DropDb(dbUrl string, filePath string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	pool, err := CreatePool(dbUrl, logger)
 
-	dropTableSql, err := os.ReadFile("./db/DropTables.sql")
+	dropTableSql, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +40,8 @@ func DropDb(dbUrl string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Info("Tables removed!")
 
 	return pool, err
 }
