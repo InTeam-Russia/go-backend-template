@@ -7,9 +7,12 @@ import (
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/session"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/shared"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/user"
+	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+const sessionCookieName = "SESSION_ID"
 
 type Seconds = int
 
@@ -39,13 +42,13 @@ func SetupRoutes(
 	cookieConfig *CookieConfig,
 ) {
 	r.POST("/login", func(c *gin.Context) {
-		var json Login
-		if err := c.ShouldBindBodyWithJSON(&json); err != nil {
+		var loginJson Login
+		if err := c.ShouldBindBodyWithJSON(&loginJson); err != nil {
 			c.JSON(http.StatusBadRequest, apierr.InvalidJsonError)
 			return
 		}
 
-		user, err := userRepo.GetByUsername(json.Username)
+		user, err := userRepo.GetByUsername(loginJson.Username)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
@@ -58,7 +61,7 @@ func SetupRoutes(
 			return
 		}
 
-		if !shared.ValidPassword(json.Password, user.PasswordHash, user.PasswordSalt) {
+		if !shared.ValidPassword(loginJson.Password, user.PasswordHash, user.PasswordSalt) {
 			c.JSON(http.StatusUnauthorized, apierr.WrongCredentials)
 			return
 		}
@@ -71,7 +74,7 @@ func SetupRoutes(
 		}
 
 		c.SetCookie(
-			"SESSION_ID",
+			sessionCookieName,
 			session.Id.String(),
 			cookieConfig.SessionLifetime,
 			cookieConfig.Path,
@@ -86,17 +89,17 @@ func SetupRoutes(
 	})
 
 	r.POST("/register", func(c *gin.Context) {
-		var json Register
-		if err := c.ShouldBindBodyWithJSON(&json); err != nil {
+		var registerJson Register
+		if err := c.ShouldBindBodyWithJSON(&registerJson); err != nil {
 			c.JSON(http.StatusBadRequest, apierr.InvalidJsonError)
 			return
 		}
 
 		createUser := user.CreateUser{
-			FirstName: json.FirstName,
-			LastName:  json.LastName,
-			Username:  json.Username,
-			Password:  json.Password,
+			FirstName: registerJson.FirstName,
+			LastName:  registerJson.LastName,
+			Username:  registerJson.Username,
+			Password:  registerJson.Password,
 			Role:      "USER",
 		}
 
@@ -114,6 +117,33 @@ func SetupRoutes(
 			LastName:  u.LastName,
 			Username:  u.Username,
 			Role:      u.Role,
+		})
+	})
+
+	r.POST("/logout", func(c *gin.Context) {
+		cookie, err := c.Cookie(sessionCookieName)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
+			return
+		}
+
+		cookieIdUUID, err := helpers.UUIDFromString(cookie)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
+			return
+		}
+
+		err = sessionRepo.DeleteById(cookieIdUUID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			logger.Error(err.Error())
+			return
+		}
+
+		c.SetCookie(sessionCookieName, "", -1, "/", "localhost", false, true)
+
+		c.JSON(http.StatusCreated, gin.H{
+			"status": "OK",
 		})
 	})
 }
