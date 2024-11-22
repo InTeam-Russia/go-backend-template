@@ -15,6 +15,3 @@ COPY --from=builder /app/initdb /app/initdb
 COPY --from=builder /app/dropdb /app/dropdb
 COPY --from=builder /app/db/CreateTables.sql /app/db/CreateTables.sql
 COPY --from=builder /app/db/DropTables.sql /app/db/DropTables.sql
-
-CMD [ "/app/webserver" ]
-

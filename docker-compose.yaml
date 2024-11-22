@@ -1,16 +1,17 @@
 services:
   backend:
     build: .
+    command: ["/app/webserver"]
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     environment:
-      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - POSTGRES_URL=postgresql://${DB_USER:-sguhack}@db/${DB_NAME:-sguhack}
       - REDIS_URL=redis://dragonfly/0
       - SESSION_COOKIE_SECURE=false
-      - SESSION_COOKIE_DOMAIN=localhost:5173
-      - LOG_LEVEL=debug
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=123
+      - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN:-localhost:5173}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-123}
     depends_on:
       - db
       - dragonfly
@@ -19,13 +20,13 @@ services:
     build: .
     command: ["/app/initdb"]
     environment:
-      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - POSTGRES_URL=postgresql://${DB_USER:-sguhack}@db/${DB_NAME:-sguhack}
       - REDIS_URL=redis://dragonfly/0
       - SESSION_COOKIE_SECURE=false
-      - SESSION_COOKIE_DOMAIN=localhost:5173
-      - LOG_LEVEL=debug
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=123
+      - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN:-localhost:5173}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-123}
       - SQL_FILE=/app/db/CreateTables.sql
     depends_on:
       - backend
@@ -34,13 +35,13 @@ services:
     build: .
     command: ["/app/dropdb"]
     environment:
-      - POSTGRES_URL=postgresql://${DB_USER}@db/${DB_NAME}
+      - POSTGRES_URL=postgresql://${DB_USER:-sguhack}@db/${DB_NAME:-sguhack}
       - REDIS_URL=redis://dragonfly/0
       - SESSION_COOKIE_SECURE=false
-      - SESSION_COOKIE_DOMAIN=localhost:5173
-      - LOG_LEVEL=debug
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=123
+      - SESSION_COOKIE_DOMAIN=${SESSION_COOKIE_DOMAIN:-localhost:5173}
+      - LOG_LEVEL=${LOG_LEVEL:-debug}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-123}
       - SQL_FILE=/app/db/DropTables.sql
     depends_on:
       - backend
@@ -49,10 +50,10 @@ services:
     image: postgres:17.1-alpine
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME:-sguhack}
+      - POSTGRES_USER=${DB_USER:-sguhack}
     healthcheck:
-      test: "pg_isready --username=${DB_USER} --database=${DB_NAME}"
+      test: "pg_isready --username=${DB_USER:-sguhack} --database=${DB_NAME:-sguhack}"
       interval: 5s
       timeout: 5s
       retries: 3
