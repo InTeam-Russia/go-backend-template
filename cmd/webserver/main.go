@@ -37,7 +37,7 @@ func main() {
 	defer redisClient.Close()
 
 	r := gin.New()
-	helpers.SetupCORS(r)
+	helpers.SetupCORS(r, config)
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 	r.Use(ginzap.RecoveryWithZap(logger, true))
 
