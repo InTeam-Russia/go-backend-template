@@ -13,19 +13,19 @@ import (
 
 const redisSessionPrefix = "SESSION"
 
-type RedisSessionRepository struct {
+type RedisRepo struct {
 	redisClient *redis.Client
 	logger      *zap.Logger
 }
 
-func NewRedisSessionRepository(redisClient *redis.Client, logger *zap.Logger) SessionRepository {
-	return &RedisSessionRepository{redisClient, logger}
+func NewRedisRepo(redisClient *redis.Client, logger *zap.Logger) Repo {
+	return &RedisRepo{redisClient, logger}
 }
 
-func (r *RedisSessionRepository) Create(userId int64, sessionLifetime Seconds) (*Session, error) {
+func (r *RedisRepo) Create(userId int64, sessionLifetime Seconds) (*Model, error) {
 	expiration := time.Second * time.Duration(sessionLifetime)
 
-	session := Session{
+	session := Model{
 		Id:        uuid.New(),
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(expiration),
@@ -52,7 +52,7 @@ func (r *RedisSessionRepository) Create(userId int64, sessionLifetime Seconds) (
 	return &session, nil
 }
 
-func (r *RedisSessionRepository) GetById(id uuid.UUID) (*Session, error) {
+func (r *RedisRepo) GetById(id uuid.UUID) (*Model, error) {
 	key := fmt.Sprintf("%s:%s", redisSessionPrefix, id.String())
 	sessionJson, err := r.redisClient.Get(context.Background(), key).Result()
 
@@ -65,7 +65,7 @@ func (r *RedisSessionRepository) GetById(id uuid.UUID) (*Session, error) {
 		return nil, err
 	}
 
-	var session Session
+	var session Model
 	err = json.Unmarshal([]byte(sessionJson), &session)
 	if err != nil {
 		r.logger.Error("Failed to unmarshal session", zap.Error(err))
@@ -76,7 +76,7 @@ func (r *RedisSessionRepository) GetById(id uuid.UUID) (*Session, error) {
 	return &session, nil
 }
 
-func (r *RedisSessionRepository) DeleteById(id uuid.UUID) error {
+func (r *RedisRepo) DeleteById(id uuid.UUID) error {
 	key := fmt.Sprintf("%s:%s", redisSessionPrefix, id.String())
 
 	err := r.redisClient.Del(context.Background(), key).Err()

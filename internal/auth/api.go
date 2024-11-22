@@ -1,74 +1,64 @@
-package api
+package auth
 
 import (
 	"net/http"
 
 	"github.com/InTeam-Russia/go-backend-template/internal/apierr"
+	"github.com/InTeam-Russia/go-backend-template/internal/auth/password"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/session"
-	"github.com/InTeam-Russia/go-backend-template/internal/auth/shared"
 	"github.com/InTeam-Russia/go-backend-template/internal/auth/user"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-const sessionCookieName = "SESSION_ID"
-
-type Seconds = int
-
-type CookieConfig struct {
-	SessionLifetime Seconds
-	Secure          bool
-	Path            string
-	HttpOnly        bool
-	Domain          string
+type Login struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
-func DefaultCookieConfig() *CookieConfig {
-	return &CookieConfig{
-		SessionLifetime: 604800, // 7 weeks
-		Secure:          true,
-		Path:            "/",
-		HttpOnly:        true,
-		Domain:          "",
-	}
+type Register struct {
+	FirstName string `json:"firstName" binding:"required"`
+	LastName  string `json:"lastName" binding:"required"`
+	Username  string `json:"username" binding:"required"`
+	Password  string `json:"password" binding:"required"`
 }
 
 func SetupRoutes(
 	r *gin.Engine,
-	userRepo user.UserRepository,
-	sessionRepo session.SessionRepository,
+	userRepo user.Repo,
+	sessionRepo session.Repo,
 	logger *zap.Logger,
 	cookieConfig *CookieConfig,
 ) {
 	r.POST("/login", func(c *gin.Context) {
 		var loginJson Login
 		if err := c.ShouldBindBodyWithJSON(&loginJson); err != nil {
-			c.JSON(http.StatusBadRequest, apierr.InvalidJsonError)
+			c.JSON(http.StatusBadRequest, apierr.InvalidJSON)
 			return
 		}
 
 		user, err := userRepo.GetByUsername(loginJson.Username)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
 
 		if user == nil {
-			c.JSON(http.StatusNotFound, apierr.NotFoundError)
+			c.JSON(http.StatusNotFound, apierr.NotFound)
 			return
 		}
 
-		if !shared.ValidPassword(loginJson.Password, user.PasswordHash, user.PasswordSalt) {
+		if !password.Valid(loginJson.Password, user.PasswordHash, user.PasswordSalt) {
 			c.JSON(http.StatusUnauthorized, apierr.WrongCredentials)
 			return
 		}
 
 		session, err := sessionRepo.Create(user.Id, cookieConfig.SessionLifetime)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
@@ -91,11 +81,11 @@ func SetupRoutes(
 	r.POST("/register", func(c *gin.Context) {
 		var registerJson Register
 		if err := c.ShouldBindBodyWithJSON(&registerJson); err != nil {
-			c.JSON(http.StatusBadRequest, apierr.InvalidJsonError)
+			c.JSON(http.StatusBadRequest, apierr.InvalidJSON)
 			return
 		}
 
-		createUser := user.CreateUser{
+		createUser := user.CreateModel{
 			FirstName: registerJson.FirstName,
 			LastName:  registerJson.LastName,
 			Username:  registerJson.Username,
@@ -105,7 +95,7 @@ func SetupRoutes(
 
 		u, err := userRepo.Create(&createUser)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
@@ -128,7 +118,7 @@ func SetupRoutes(
 
 		err = sessionRepo.DeleteById(cookieIdUUID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
@@ -156,7 +146,7 @@ func SetupRoutes(
 		session, err := sessionRepo.GetById(cookieIdUUID)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
@@ -169,7 +159,7 @@ func SetupRoutes(
 		u, err := userRepo.GetById(session.UserId)
 
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServerError)
+			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
 			return
 		}
@@ -183,8 +173,8 @@ func SetupRoutes(
 	})
 }
 
-func mapUserToUserOut(u *user.User) *user.UserOut {
-	return &user.UserOut{
+func mapUserToUserOut(u *user.Model) *user.OutModel {
+	return &user.OutModel{
 		Id:        u.Id,
 		CreatedAt: u.CreatedAt,
 		FirstName: u.FirstName,

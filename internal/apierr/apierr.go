@@ -4,19 +4,19 @@ type ApiError struct {
 	Error string `json:"error"`
 }
 
-func NewApiError(error string) ApiError {
+func New(error string) ApiError {
 	return ApiError{Error: error}
 }
 
-var InternalServerError = ApiError{
+var InternalServer = ApiError{
 	Error: "INTERNAL_SERVER",
 }
 
-var InvalidJsonError = ApiError{
+var InvalidJSON = ApiError{
 	Error: "INVALID_JSON",
 }
 
-var NotFoundError = ApiError{
+var NotFound = ApiError{
 	Error: "NOT_FOUND",
 }
 

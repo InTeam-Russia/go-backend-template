@@ -3,15 +3,19 @@ package main
 import (
 	"os"
 
-	"github.com/InTeam-Russia/go-backend-template/internal/auth"
+	"github.com/InTeam-Russia/go-backend-template/internal/applogger"
+	"github.com/InTeam-Russia/go-backend-template/internal/auth/user"
 	"github.com/InTeam-Russia/go-backend-template/internal/config"
 	"github.com/InTeam-Russia/go-backend-template/internal/db"
-	"github.com/InTeam-Russia/go-backend-template/internal/helpers"
 )
 
 func main() {
-	config, err := config.LoadConfigFromEnv()
-	logger := helpers.CreateLogger(config.LogLevel)
+	config, err := config.LoadFromEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	logger := applogger.Create(config.LogLevel)
 
 	pgPool, err := db.InitDb(config.PostgresUrl, os.Getenv("SQL_FILE"), logger)
 	if err != nil {
@@ -20,8 +24,8 @@ func main() {
 	}
 	defer pgPool.Close()
 
-	userRepo := auth.NewPgUserRepository(pgPool, logger)
-	_, err = userRepo.Create(&auth.CreateUser{
+	userRepo := user.NewPGRepo(pgPool, logger)
+	_, err = userRepo.Create(&user.CreateModel{
 		FirstName: "Admin",
 		LastName:  "Admin",
 		Username:  config.AdminUsername,
