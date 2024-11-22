@@ -2,7 +2,7 @@ package user
 
 import "time"
 
-type User struct {
+type Model struct {
 	Id           int64
 	CreatedAt    time.Time
 	FirstName    string
@@ -13,7 +13,7 @@ type User struct {
 	PasswordSalt []byte
 }
 
-type UserOut struct {
+type OutModel struct {
 	Id        int64     `json:"id"`
 	CreatedAt time.Time `json:"createdAt"`
 	FirstName string    `json:"firstName"`
@@ -22,7 +22,7 @@ type UserOut struct {
 	Role      string    `json:"role"`
 }
 
-type CreateUser struct {
+type CreateModel struct {
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
 	Username  string `json:"username" binding:"required"`

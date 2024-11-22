@@ -12,6 +12,10 @@ import (
 
 func InitDb(dbUrl string, filePath string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	pool, err := CreatePool(dbUrl, logger)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	createTableSql, err := os.ReadFile(filePath)
 	if err != nil {
@@ -30,6 +34,10 @@ func InitDb(dbUrl string, filePath string, logger *zap.Logger) (*pgxpool.Pool, e
 
 func DropDb(dbUrl string, filePath string, logger *zap.Logger) (*pgxpool.Pool, error) {
 	pool, err := CreatePool(dbUrl, logger)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	dropTableSql, err := os.ReadFile(filePath)
 	if err != nil {

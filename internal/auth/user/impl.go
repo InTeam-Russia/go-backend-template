@@ -5,19 +5,19 @@ import (
 	"errors"
 	"time"
 
-	"github.com/InTeam-Russia/go-backend-template/internal/auth/shared"
+	"github.com/InTeam-Russia/go-backend-template/internal/auth/password"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 )
 
-type PgUserRepository struct {
+type PGRepo struct {
 	db     *pgxpool.Pool
 	logger *zap.Logger
 }
 
-func NewPgUserRepository(db *pgxpool.Pool, logger *zap.Logger) UserRepository {
-	return &PgUserRepository{db, logger}
+func NewPGRepo(db *pgxpool.Pool, logger *zap.Logger) Repo {
+	return &PGRepo{db, logger}
 }
 
 const createUserSql = `
@@ -26,16 +26,16 @@ const createUserSql = `
 	RETURNING id, created_at
 `
 
-func (r *PgUserRepository) Create(user *CreateUser) (*User, error) {
-	passwordSalt, err := shared.GenerateSalt(16)
+func (r *PGRepo) Create(user *CreateModel) (*Model, error) {
+	passwordSalt, err := password.GenerateSalt()
 	if err != nil {
 		return nil, nil
 	}
 
-	passwordHash := shared.HashPassword(user.Password, passwordSalt)
+	passwordHash := password.Hash(user.Password, passwordSalt)
 	r.logger.Debug("Executing query", zap.String("query", createUserSql))
 
-	var newUser User
+	var newUser Model
 	newUser.FirstName = user.FirstName
 	newUser.LastName = user.LastName
 	newUser.Username = user.Username
@@ -68,10 +68,10 @@ const getByIdSql = `
 	WHERE id = $1
 `
 
-func (r *PgUserRepository) GetById(id int64) (*User, error) {
+func (r *PGRepo) GetById(id int64) (*Model, error) {
 	r.logger.Debug("Executing query", zap.String("query", getByIdSql))
 
-	var user User
+	var user Model
 	row := r.db.QueryRow(context.Background(), getByIdSql, id)
 
 	err := row.Scan(
@@ -100,10 +100,10 @@ const getByUsernameSql = `
 	WHERE username = $1
 `
 
-func (r *PgUserRepository) GetByUsername(username string) (*User, error) {
+func (r *PGRepo) GetByUsername(username string) (*Model, error) {
 	r.logger.Debug("Executing query", zap.String("query", getByUsernameSql))
 
-	var user User
+	var user Model
 	row := r.db.QueryRow(context.Background(), getByUsernameSql, username)
 
 	err := row.Scan(
@@ -132,7 +132,7 @@ const deleteByIdSql = `
 	WHERE id = $1
 `
 
-func (r *PgUserRepository) DeleteById(id int64) error {
+func (r *PGRepo) DeleteById(id int64) error {
 	r.logger.Debug("Executing query", zap.String("query", deleteByIdSql))
 	_, err := r.db.Exec(context.Background(), deleteByIdSql, id)
 	return err
