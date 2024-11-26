@@ -19,5 +19,3 @@ func DefaultCookieConfig() *CookieConfig {
 		Domain:          "",
 	}
 }
-
-const sessionCookieName = "SESSION_ID"

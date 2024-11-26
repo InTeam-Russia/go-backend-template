@@ -56,7 +56,7 @@ func SetupRoutes(
 			return
 		}
 
-		session, err := sessionRepo.Create(user.Id, cookieConfig.SessionLifetime)
+		s, err := sessionRepo.Create(user.Id, cookieConfig.SessionLifetime)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
@@ -64,8 +64,8 @@ func SetupRoutes(
 		}
 
 		c.SetCookie(
-			sessionCookieName,
-			session.Id.String(),
+			session.COOKIE_NAME,
+			s.Id.String(),
 			cookieConfig.SessionLifetime,
 			cookieConfig.Path,
 			cookieConfig.Domain,
@@ -104,7 +104,7 @@ func SetupRoutes(
 	})
 
 	r.POST("/logout", func(c *gin.Context) {
-		cookie, err := c.Cookie(sessionCookieName)
+		cookie, err := c.Cookie(session.COOKIE_NAME)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
 			return
@@ -123,7 +123,7 @@ func SetupRoutes(
 			return
 		}
 
-		c.SetCookie(sessionCookieName, "", -1, "/", "localhost", false, true)
+		c.SetCookie(session.COOKIE_NAME, "", -1, "/", "localhost", false, true)
 
 		c.JSON(http.StatusCreated, gin.H{
 			"status": "OK",
@@ -131,38 +131,12 @@ func SetupRoutes(
 	})
 
 	r.GET("/session", func(c *gin.Context) {
-		cookie, err := c.Cookie(sessionCookieName)
+		session, err := session.CheckHTTPReq(c, sessionRepo, logger)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
-			return
-		}
-
-		cookieIdUUID, err := uuid.Parse(cookie)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, apierr.CookieNotExists)
-			return
-		}
-
-		session, err := sessionRepo.GetById(cookieIdUUID)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
-			logger.Error(err.Error())
-			return
-		}
-
-		if session == nil {
-			c.JSON(http.StatusUnauthorized, apierr.SessionNotFound)
-			return
-		}
-
-		if session.IsExpired() {
-			c.JSON(http.StatusUnauthorized, apierr.SessionExpired)
 			return
 		}
 
 		u, err := userRepo.GetById(session.UserId)
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, apierr.InternalServer)
 			logger.Error(err.Error())
