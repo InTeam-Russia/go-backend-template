@@ -156,6 +156,11 @@ func SetupRoutes(
 			return
 		}
 
+		if session.IsExpired() {
+			c.JSON(http.StatusUnauthorized, apierr.SessionExpired)
+			return
+		}
+
 		u, err := userRepo.GetById(session.UserId)
 
 		if err != nil {

@@ -32,6 +32,10 @@ var SessionNotFound = ApiError{
 	Error: "SESSION_NOT_FOUND",
 }
 
+var SessionExpired = ApiError{
+	Error: "SESSION_EXPIRED",
+}
+
 var UserNotFound = ApiError{
 	Error: "USER_NOT_FOUND",
 }
