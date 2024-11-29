@@ -21,6 +21,7 @@ type Register struct {
 	FirstName string `json:"firstName" binding:"required"`
 	LastName  string `json:"lastName" binding:"required"`
 	Username  string `json:"username" binding:"required"`
+	Email     string `json:"email" binding:"required"`
 	Password  string `json:"password" binding:"required"`
 }
 
@@ -89,6 +90,7 @@ func SetupRoutes(
 			FirstName: registerJson.FirstName,
 			LastName:  registerJson.LastName,
 			Username:  registerJson.Username,
+			Email:     registerJson.Email,
 			Password:  registerJson.Password,
 			Role:      "USER",
 		}
@@ -159,6 +161,7 @@ func mapUserToUserOut(u *user.Model) *user.OutModel {
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Username:  u.Username,
+		Email:     u.Email,
 		Role:      u.Role,
 	}
 }

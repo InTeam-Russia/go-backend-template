@@ -21,8 +21,8 @@ func NewPGRepo(db *pgxpool.Pool, logger *zap.Logger) Repo {
 }
 
 const createUserSql = `
-	INSERT INTO users (first_name, last_name, username, role, password_hash, password_salt, created_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)
+	INSERT INTO users (first_name, last_name, username, email, role, password_hash, password_salt, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	RETURNING id, created_at
 `
 
@@ -39,6 +39,7 @@ func (r *PGRepo) Create(user *CreateModel) (*Model, error) {
 	newUser.FirstName = user.FirstName
 	newUser.LastName = user.LastName
 	newUser.Username = user.Username
+	newUser.Email = user.Email
 	newUser.Role = user.Role
 	newUser.PasswordHash = passwordHash
 	newUser.PasswordSalt = passwordSalt
@@ -49,6 +50,7 @@ func (r *PGRepo) Create(user *CreateModel) (*Model, error) {
 		newUser.FirstName,
 		newUser.LastName,
 		newUser.Username,
+		newUser.Email,
 		newUser.Role,
 		newUser.PasswordHash,
 		newUser.PasswordSalt,
@@ -63,7 +65,7 @@ func (r *PGRepo) Create(user *CreateModel) (*Model, error) {
 }
 
 const getByIdSql = `
-	SELECT id, first_name, last_name, username, role, password_hash, password_salt, created_at
+	SELECT id, first_name, last_name, username, email, role, password_hash, password_salt, created_at
 	FROM users
 	WHERE id = $1
 `
@@ -79,6 +81,7 @@ func (r *PGRepo) GetById(id int64) (*Model, error) {
 		&user.FirstName,
 		&user.LastName,
 		&user.Username,
+		&user.Email,
 		&user.Role,
 		&user.PasswordHash,
 		&user.PasswordSalt,
@@ -95,7 +98,7 @@ func (r *PGRepo) GetById(id int64) (*Model, error) {
 }
 
 const getByUsernameSql = `
-	SELECT id, first_name, last_name, username, role, password_hash, password_salt, created_at
+	SELECT id, first_name, last_name, username, email, role, password_hash, password_salt, created_at
 	FROM users
 	WHERE username = $1
 `
@@ -111,6 +114,7 @@ func (r *PGRepo) GetByUsername(username string) (*Model, error) {
 		&user.FirstName,
 		&user.LastName,
 		&user.Username,
+		&user.Email,
 		&user.Role,
 		&user.PasswordHash,
 		&user.PasswordSalt,

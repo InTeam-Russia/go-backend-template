@@ -18,6 +18,7 @@ type Config struct {
 	AllowOrigins        []string
 	AdminUsername       string
 	AdminPassword       string
+	AdminEmail          string
 }
 
 func LoadFromEnv() (*Config, error) {
@@ -40,5 +41,6 @@ func LoadFromEnv() (*Config, error) {
 		AllowOrigins:        strings.Split(os.Getenv("ALLOW_ORIGINS"), ","),
 		AdminUsername:       os.Getenv("ADMIN_USERNAME"),
 		AdminPassword:       os.Getenv("ADMIN_PASSWORD"),
+		AdminEmail:          os.Getenv("ADMIN_EMAIL"),
 	}, nil
 }

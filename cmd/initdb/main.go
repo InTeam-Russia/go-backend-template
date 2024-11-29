@@ -31,6 +31,7 @@ func main() {
 		Username:  config.AdminUsername,
 		Role:      "ADMIN",
 		Password:  config.AdminPassword,
+		Email:     config.AdminEmail,
 	})
 
 	if err != nil {
